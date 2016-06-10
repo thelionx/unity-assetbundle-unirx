@@ -5,33 +5,36 @@ using System.Collections;
 using UnityEditor;
 #endif
 
-public class AssetBundlePreferences
+namespace Bedivere.AssetBundle
 {
-    #if UNITY_EDITOR
-    static int m_SimulateAssetBundleInEditor = -1;
-    const string kSimulateAssetBundles = "SimulateAssetBundles";
-
-    /// <summary>
-    /// Flag to indicate if we want to simulate assetBundles in Editor without building them actually.
-    /// </summary>
-    public static bool SimulateAssetBundleInEditor
+    public class AssetBundlePreferences
     {
-        get
-        {
-            if (m_SimulateAssetBundleInEditor == -1)
-                m_SimulateAssetBundleInEditor = EditorPrefs.GetBool(kSimulateAssetBundles, true) ? 1 : 0;
+        #if UNITY_EDITOR
+        static int m_SimulateAssetBundleInEditor = -1;
+        const string kSimulateAssetBundles = "SimulateAssetBundles";
 
-            return m_SimulateAssetBundleInEditor != 0;
-        }
-        set
+        /// <summary>
+        /// Flag to indicate if we want to simulate assetBundles in Editor without building them actually.
+        /// </summary>
+        public static bool SimulateAssetBundleInEditor
         {
-            int newValue = value ? 1 : 0;
-            if (newValue != m_SimulateAssetBundleInEditor)
+            get
             {
-                m_SimulateAssetBundleInEditor = newValue;
-                EditorPrefs.SetBool(kSimulateAssetBundles, value);
+                if (m_SimulateAssetBundleInEditor == -1)
+                    m_SimulateAssetBundleInEditor = EditorPrefs.GetBool(kSimulateAssetBundles, true) ? 1 : 0;
+
+                return m_SimulateAssetBundleInEditor != 0;
+            }
+            set
+            {
+                int newValue = value ? 1 : 0;
+                if (newValue != m_SimulateAssetBundleInEditor)
+                {
+                    m_SimulateAssetBundleInEditor = newValue;
+                    EditorPrefs.SetBool(kSimulateAssetBundles, value);
+                }
             }
         }
+        #endif
     }
-    #endif
 }
