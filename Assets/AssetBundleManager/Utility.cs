@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-namespace Bedivere.AssetBundle
+namespace AssetBundles
 {
     public class Utility
     {
