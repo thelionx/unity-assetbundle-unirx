@@ -7,7 +7,7 @@ namespace AssetBundles
 {
     public class Utility
     {
-        public const string AssetBundlesOutputPath = "AssetBundles";
+        public const string AssetBundlesOutputPath = "Assets/AssetBundles";
 
         public static string GetPlatformName()
         {

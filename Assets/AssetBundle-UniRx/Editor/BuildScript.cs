@@ -47,6 +47,7 @@ namespace AssetBundles
 
             //@TODO: use append hash... (Make sure pipeline works correctly with it.)
             BuildPipeline.BuildAssetBundles(outputPath, options, EditorUserBuildSettings.activeBuildTarget);
+            AssetDatabase.Refresh();
         }
 
         public static void WriteServerURL()
