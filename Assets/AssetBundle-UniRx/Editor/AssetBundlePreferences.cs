@@ -5,7 +5,7 @@ using System.Collections;
 using UnityEditor;
 #endif
 
-namespace Bedivere.AssetBundle
+namespace Bedivere.AssetBundles
 {
     public class AssetBundlePreferences
     {

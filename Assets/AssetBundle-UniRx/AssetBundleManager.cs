@@ -2,56 +2,98 @@
 using System.Collections;
 using UniRx;
 using System.IO;
+using System.Collections.Generic;
+using System;
 
-namespace Bedivere.AssetBundle
+namespace Bedivere.AssetBundles
 {
     public class AssetBundleManager : MonoBehaviour 
     {
-        const string BASE_DOWNLOAD_URL = "https://s3-ap-southeast-1.amazonaws.com/assets.touchten.com/target+acquired/Android/";
+        public static AssetBundleManager Instance;
 
         private AssetBundleManifest manifest;
-        void LoadAssetBundleManifest()
+        private Dictionary<string, AssetBundle> loadedBundles = new Dictionary<string, AssetBundle>();
+
+        void Awake()
         {
-            string url = Path.Combine(BASE_DOWNLOAD_URL, Utility.GetPlatformName());
-
-            Debug.Log("Load Asset Bundle Manifest : " + url);
-            var observable = ObservableWWW.GetWWW(url);
-            observable.Subscribe(
-                www => 
-                {
-                    manifest = www.assetBundle.LoadAsset<AssetBundleManifest>("AssetBundleManifest");
-                    string[] bundles = manifest.GetAllAssetBundles();
-                    for (int i = 0; i < bundles.Length; i++)
-                    {
-                        Debug.Log(manifest.GetAssetBundleHash(bundles[i]));
-                    }
-                },
-                error =>
-                {
-                    Debug.Log(error.Message);
-                }
-            );
-
+            Instance = this;
         }
 
-        void LoadAssetBundle(string bundleName)
+        public IObservable<AssetBundleManifest> LoadAssetBundleManifestStream(string baseDownloadURL)
         {
-            string url = Path.Combine(BASE_DOWNLOAD_URL, bundleName);
-            if (Caching.IsVersionCached(url, manifest.GetAssetBundleHash(bundleName)))
-                Debug.LogFormat("{0} is alredy cached", bundleName);
-            else
-                Debug.LogFormat("{0} is not cached", bundleName);
-
-            var observable = ObservableWWW.LoadFromCacheOrDownload(url, manifest.GetAssetBundleHash(bundleName));
-            observable.Subscribe(bundle =>
+            return Observable.Create<AssetBundleManifest> (
+                stream =>
                 {
-                    string[] names = bundle.GetAllAssetNames();
-                    for (int i = 0; i < names.Length; i++)
-                    {
-                        Debug.Log(names[i]);
+                    if (manifest) {
+                        stream.OnNext(manifest);
+                        stream.OnCompleted();
                     }
+                    else
+                    {
+                        string url = Path.Combine(baseDownloadURL, Utility.GetPlatformName());
+
+                        var observable = ObservableWWW.GetWWW(url);
+                        observable.Subscribe(
+                            www => 
+                            {
+                                manifest = www.assetBundle.LoadAsset<AssetBundleManifest>("AssetBundleManifest");
+                                stream.OnNext(manifest);
+                                stream.OnCompleted();
+                            },
+                            error => stream.OnError(error)
+                        );
+                    }
+
+                    return Disposable.Empty;
                 }
             );
+        }
+
+        public IObservable<AssetBundle> LoadAssetBundleStream(string baseDownloadURL, string bundleName)
+        {
+            return Observable.Create<AssetBundle>(
+                stream => 
+                {
+                    if (loadedBundles.ContainsKey(bundleName))
+                    {
+                        Debug.LogFormat("[AssetBundle]{0} is already loaded", bundleName);
+
+                        AssetBundle bundle = loadedBundles[bundleName];
+                        stream.OnNext(bundle);
+                        stream.OnCompleted();
+                    }
+                    else
+                    {
+                        string url = Path.Combine(baseDownloadURL, bundleName);
+
+                        Debug.LogFormat("[AssetBundle]Cached : {0} | {1}", Caching.IsVersionCached(url, manifest.GetAssetBundleHash(bundleName)), url); 
+
+                        var observable = ObservableWWW.LoadFromCacheOrDownload(url, manifest.GetAssetBundleHash(bundleName));
+                        observable.Subscribe(
+                            bundle =>
+                            {
+                                loadedBundles.Add(bundleName, bundle);
+                                stream.OnNext(bundle);
+                                stream.OnCompleted();
+                            },
+                            error => stream.OnError(error)
+                        ); 
+                    }
+                    return Disposable.Empty;
+                }
+            );
+        }
+
+        void UnloadAssetBundle(string bundleName, bool unloadAllLoadedObjects = false)
+        {
+            AssetBundle bundle = null;
+            loadedBundles.TryGetValue(bundleName, out bundle);
+
+            if (bundle != null)
+            {
+                bundle.Unload(unloadAllLoadedObjects);
+                loadedBundles.Remove(bundleName);
+            }
         }
 
         void IsCached()
@@ -64,16 +106,14 @@ namespace Bedivere.AssetBundle
             Debug.LogFormat("Clean Cache : {0}", Caching.CleanCache());
         }
 
-        void Update()
+        void LoadAssetBundleFromFile(string bundleName)
         {
-            if (Input.GetKeyDown(KeyCode.A))
-                LoadAssetBundleManifest();
+            string path = Path.Combine(Application.dataPath, Utility.AssetBundlesOutputPath.Replace("Assets/", ""));
+            Debug.Log(Path.Combine(path, bundleName));
+            AssetBundle bundle = AssetBundle.LoadFromFile(Path.Combine(path, bundleName));
 
-            if (Input.GetKeyDown(KeyCode.S))
-                LoadAssetBundle(manifest.GetAllAssetBundles()[0]);
-
-            if (Input.GetKeyDown(KeyCode.D))
-                ClearCache();
+            UIAtlas atlas = bundle.LoadAsset<UIAtlas>("Atlas1");
+            Debug.Log(atlas.texture);
         }
     }
 }

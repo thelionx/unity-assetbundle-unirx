@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEditor;
 #endif
 
-namespace Bedivere.AssetBundle
+namespace Bedivere.AssetBundles
 {
     public class Utility
     {
@@ -16,6 +16,22 @@ namespace Bedivere.AssetBundle
     #else
             return GetPlatformForAssetBundles(Application.platform);
     #endif
+        }
+
+        public static string STREAMING_ASSETS_PATH
+        {
+            get 
+            {
+    #if UNITY_EDITOR
+                return Application.dataPath + "/StreamingAssets";
+    #elif UNITY_IOS
+                return Application.dataPath + "/Raw";
+    #elif UNITY_ANDROID
+                return "jar:file://" + Application.dataPath + "!/assets/";
+    #else
+                return Application.dataPath + "/StreamingAssets";
+    #endif
+            }
         }
 
     #if UNITY_EDITOR

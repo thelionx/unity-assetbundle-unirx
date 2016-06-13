@@ -7,7 +7,7 @@ using System.IO;
 using System.Net;
 using System.Net.Sockets;
 
-namespace AssetBundles
+namespace Bedivere.AssetBundles
 {
     public class BuildScript
     {

@@ -1,9 +1,8 @@
 ﻿using UnityEngine;
 using UnityEditor;
 using System.Collections;
-using AssetBundles;
 
-namespace Bedivere.AssetBundle
+namespace Bedivere.AssetBundles
 {
     public class AssetBundlesMenuItems
     {
