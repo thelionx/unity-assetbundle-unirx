@@ -49,7 +49,7 @@ namespace Bedivere.AssetBundles
             );
         }
 
-        public IObservable<AssetBundle> LoadAssetBundleStream(string baseDownloadURL, string bundleName)
+        public IObservable<AssetBundle> LoadAssetBundleStream(string baseDownloadURL, string bundleName, IProgress<float> progressNotifier = null)
         {
             return Observable.Create<AssetBundle>(
                 stream => 
@@ -68,7 +68,7 @@ namespace Bedivere.AssetBundles
 
                         Debug.LogFormat("[AssetBundle]Cached : {0} | {1}", Caching.IsVersionCached(url, manifest.GetAssetBundleHash(bundleName)), url); 
 
-                        var observable = ObservableWWW.LoadFromCacheOrDownload(url, manifest.GetAssetBundleHash(bundleName));
+                        var observable = ObservableWWW.LoadFromCacheOrDownload(url, manifest.GetAssetBundleHash(bundleName), progressNotifier);
                         observable.Subscribe(
                             bundle =>
                             {

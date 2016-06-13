@@ -13,13 +13,13 @@ public class NGUISpriteAtlasLoader : MonoBehaviour
     #endregion
     public AssetBundleManager bundleManager { get { return AssetBundleManager.Instance; }}
 
-    void GetAssets(string bundleName, string atlasName)
+    void GetAssets(string bundleName, string atlasName, IProgress<float> progressNotifier)
     {
         string downloadURL = CLOUD_DOWNLOAD_URL;
 
         var query = 
             from manifest in bundleManager.LoadAssetBundleManifestStream(downloadURL)
-            from bundle in bundleManager.LoadAssetBundleStream(downloadURL, bundleName)
+            from bundle in bundleManager.LoadAssetBundleStream(downloadURL, bundleName, progressNotifier)
             select bundle;
 
         query.Subscribe(
@@ -38,7 +38,7 @@ public class NGUISpriteAtlasLoader : MonoBehaviour
                     spr.atlas = atlas;
                     spr.spriteName = sprites[i];
                 }
-
+                    
                 parent.Reposition();
             }
         );
@@ -48,7 +48,14 @@ public class NGUISpriteAtlasLoader : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.A))
         {
-            GetAssets("asset2", "Atlas2");
+            var progressNotifier = new ScheduledNotifier<float>();
+            GetAssets("asset2", "Atlas2", progressNotifier);
+            progressNotifier.Subscribe(x => Debug.Log(x));
+        }
+
+        if (Input.GetKeyDown(KeyCode.D))
+        {
+            Debug.LogFormat("[AssetBundle]Clear Cache: {0}", Caching.CleanCache());
         }
     }
 }
