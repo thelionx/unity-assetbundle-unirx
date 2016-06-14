@@ -2,20 +2,24 @@
 using System.Collections;
 using Bedivere.AssetBundles;
 using UniRx;
+using System.IO;
 
 public class NGUISpriteAtlasLoader : MonoBehaviour 
 {
     public UISprite spritePrefab;
     public UIGrid parent;
 
-    #region constants
     const string CLOUD_DOWNLOAD_URL = "https://s3-ap-southeast-1.amazonaws.com/assets.touchten.com/picture-pop";
-    #endregion
     public AssetBundleManager bundleManager { get { return AssetBundleManager.Instance; }}
 
-    void GetAssets(string bundleName, string atlasName, IProgress<float> progressNotifier)
+    public void GetAssets(string bundleName, string atlasName, IProgress<float> progressNotifier)
     {
-        string downloadURL = CLOUD_DOWNLOAD_URL;
+        string downloadURL = Path.Combine(Utility.STREAMING_ASSETS_PATH, "Android");
+        downloadURL = System.Uri.EscapeUriString(downloadURL);
+        if (!downloadURL.Contains("://"))
+            downloadURL = "file://" + downloadURL;
+        
+        Debug.LogFormat("GetAssets {0} from {1}", bundleName, downloadURL);
 
         var query = 
             from manifest in bundleManager.LoadAssetBundleManifestStream(downloadURL)
@@ -44,18 +48,28 @@ public class NGUISpriteAtlasLoader : MonoBehaviour
         );
     }
 
+    public void OnGetAssetsClicked()
+    {
+        var progressNotifier = new ScheduledNotifier<float>();
+        GetAssets("asset2", "Atlas2", progressNotifier);
+        progressNotifier.Subscribe(x => Debug.Log(x));
+    }
+
+    public void OnClearCacheClicked()
+    {
+        Debug.LogFormat("[AssetBundle]Clear Cache: {0}", Caching.CleanCache());
+    }
+
     void Update()
     {
         if (Input.GetKeyDown(KeyCode.A))
         {
-            var progressNotifier = new ScheduledNotifier<float>();
-            GetAssets("asset2", "Atlas2", progressNotifier);
-            progressNotifier.Subscribe(x => Debug.Log(x));
+            OnGetAssetsClicked();
         }
 
         if (Input.GetKeyDown(KeyCode.D))
         {
-            Debug.LogFormat("[AssetBundle]Clear Cache: {0}", Caching.CleanCache());
+            OnClearCacheClicked();
         }
     }
 }
