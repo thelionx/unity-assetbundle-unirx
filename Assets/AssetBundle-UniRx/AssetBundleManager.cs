@@ -5,6 +5,10 @@ using System.IO;
 using System.Collections.Generic;
 using System;
 
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
+
 namespace Bedivere.AssetBundles
 {
     public class AssetBundleManager : MonoBehaviour 
@@ -72,7 +76,9 @@ namespace Bedivere.AssetBundles
                         observable.Subscribe(
                             bundle =>
                             {
-                                loadedBundles.Add(bundleName, bundle);
+                                if (!loadedBundles.ContainsKey(bundleName))
+                                    loadedBundles.Add(bundleName, bundle);
+                                
                                 stream.OnNext(bundle);
                                 stream.OnCompleted();
                             },
@@ -84,26 +90,35 @@ namespace Bedivere.AssetBundles
             );
         }
 
-        void UnloadAssetBundle(string bundleName, bool unloadAllLoadedObjects = false)
+        #if UNITY_EDITOR
+        public static UnityEngine.Object EditorLoadAssetFromAssetBundle(string bundleName, string assetName, Type type)
+        {
+            string[] paths = AssetDatabase.GetAssetPathsFromAssetBundleAndAssetName(bundleName, assetName);
+            return AssetDatabase.LoadAssetAtPath(paths[0], type);
+        }
+        #endif
+
+        public void UnloadAssetBundle(string bundleName, bool unloadAllLoadedObjects = false)
         {
             AssetBundle bundle = null;
             loadedBundles.TryGetValue(bundleName, out bundle);
 
             if (bundle != null)
             {
+                Debug.LogFormat("[AssetBundle]Unloaded : {0}", bundleName);
                 bundle.Unload(unloadAllLoadedObjects);
                 loadedBundles.Remove(bundleName);
             }
         }
 
-        void IsCached()
+        public bool IsBundleCached(string baseDownloadURL, string assetBundleName)
         {
-            Caching.IsVersionCached("ASD", 0);
+            return Caching.IsVersionCached(Path.Combine(baseDownloadURL, assetBundleName), manifest.GetAssetBundleHash(assetBundleName));
         }
 
-        void ClearCache()
+        public void CleanCache()
         {
-            Debug.LogFormat("Clean Cache : {0}", Caching.CleanCache());
+            Debug.LogFormat("[AssetBundle]Clean Cache : {0}", Caching.CleanCache());
         }
 
         void LoadAssetBundleFromFile(string bundleName)

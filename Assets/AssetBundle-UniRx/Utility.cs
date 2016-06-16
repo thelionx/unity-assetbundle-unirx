@@ -18,7 +18,7 @@ namespace Bedivere.AssetBundles
     #endif
         }
 
-        public static string STREAMING_ASSETS_PATH
+        public static string StreamingAssetsPath
         {
             get 
             {

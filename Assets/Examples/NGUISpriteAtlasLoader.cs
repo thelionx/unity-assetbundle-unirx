@@ -14,7 +14,7 @@ public class NGUISpriteAtlasLoader : MonoBehaviour
 
     public void GetAssets(string bundleName, string atlasName, IProgress<float> progressNotifier)
     {
-        string downloadURL = Path.Combine(Utility.STREAMING_ASSETS_PATH, "Android");
+        string downloadURL = Path.Combine(Utility.StreamingAssetsPath, "Android");
         downloadURL = System.Uri.EscapeUriString(downloadURL);
         if (!downloadURL.Contains("://"))
             downloadURL = "file://" + downloadURL;
